@@ -3,7 +3,10 @@
 스텝이 폰에서 체크리스트를 제출하면, 매니저 폰/PC 화면에 **몇 초 안에 자동으로** 뜨는 버전입니다.
 Firebase(Firestore)라는 무료 실시간 데이터베이스를 씁니다. 신용카드 등록 없이 무료 한도로 충분합니다.
 
-아래 순서대로만 하면 됩니다. 개발 지식 없어도 따라할 수 있어요.
+**배포된 링크**: https://asdfg7091.github.io/checklist-app/ (GitHub Pages, 이미 배포됨)
+
+지금은 Firebase 연결 정보가 비어 있어서 "설정이 필요해요" 화면만 떠요.
+아래 순서대로 설정값만 채워 넣고 다시 올리면 바로 쓸 수 있어요.
 
 ---
 
@@ -76,18 +79,25 @@ var FIREBASE_CONFIG = {
 
 4단계에서 복사한 값을 각 항목에 붙여넣고 저장하세요.
 
-## 6단계. 배포하기 (링크 하나 만들기)
+## 6단계. 다시 배포하기 (수정한 내용 반영하기)
 
-가장 쉬운 방법 — **Netlify Drop** (계정 가입도 필요 없음):
+이미 GitHub Pages로 배포되어 있어요: **https://asdfg7091.github.io/checklist-app/**
+`index.html`을 수정한 뒤 아래 명령어로 올리면 1분 안에 그 링크에 반영돼요.
 
-1. https://app.netlify.com/drop 접속
-2. 이 `checklist-app` 폴더를 통째로 브라우저 창에 드래그 앤 드롭
-3. 몇 초 후 `https://랜덤이름.netlify.app` 같은 링크가 생성됩니다 — 이 링크가 스텝/매니저가 함께 쓸 링크예요
+```bash
+git add index.html
+git commit -m "설정값 입력"
+git push
+```
 
-나중에 항목을 수정하고 다시 배포하고 싶으면, 같은 페이지에서 폴더를 다시 드래그하면 됩니다.
-(고정 도메인이 필요하면 Netlify에서 무료 계정을 만들고 사이트 이름을 지정할 수 있어요.)
+깃허브 계정 로그인 없이 파일만 바꾸고 싶다면, github.com/asdfg7091/checklist-app 저장소 페이지에서
+`index.html`을 열어 연필(수정) 아이콘으로 직접 편집 후 커밋해도 돼요.
 
-### 대안: Firebase Hosting (CLI 사용, 선택사항)
+### 대안: Netlify Drop / Firebase Hosting
+
+GitHub 대신 다른 곳에 올리고 싶다면:
+- **Netlify Drop**: https://app.netlify.com/drop 에 이 폴더를 드래그하면 계정 없이 즉시 배포돼요
+- **Firebase Hosting** (선택, Node.js 필요):
 
 Node.js가 설치되어 있다면:
 

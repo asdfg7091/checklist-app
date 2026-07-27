@@ -1,0 +1,956 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>업무 체크리스트</title>
+<style>
+  :root{
+    --bg:#faf5ee;
+    --surface:#ffffff;
+    --surface-2:#f1e7d8;
+    --border:#e3d5c0;
+    --text:#2a2018;
+    --text-muted:#8c7a64;
+    --accent:#7a4620;
+    --accent-ink:#fff8ef;
+    --accent-soft:#f0dfc7;
+    --danger:#b23b2e;
+    --danger-soft:#f7e1dc;
+    --ring:#c9410b;
+    --shadow: 0 1px 2px rgba(42,32,24,0.05);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#171310; --surface:#211b15; --surface-2:#2b231b; --border:#3c3226;
+      --text:#f3e9dc; --text-muted:#a7967f; --accent:#d69a5c; --accent-ink:#1b140d;
+      --accent-soft:#3a2c1b; --danger:#e2776a; --danger-soft:#3b211d; --ring:#e2776a;
+    }
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Segoe UI",sans-serif;
+    -webkit-font-smoothing:antialiased; font-variant-numeric:tabular-nums;
+  }
+  #app{ max-width:460px; margin:0 auto; min-height:100vh; padding-bottom:40px; }
+  h1,h2,h3,p{margin:0;} h1,h2{text-wrap:balance;}
+  button{font-family:inherit;cursor:pointer;} input{font-family:inherit;}
+  .hidden-file{display:none;}
+  .screen-center{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:40px 24px;}
+  .back-link{display:inline-flex;align-items:center;gap:5px;background:none;border:none;color:var(--text-muted);font-size:12.5px;padding:0;margin-bottom:28px;}
+  .brand-head{text-align:center;margin-bottom:36px;}
+  .brand-head .glyph{color:var(--accent);margin-bottom:10px;}
+  .brand-head h1{font-size:21px;font-weight:800;letter-spacing:-0.01em;}
+  .brand-head p{font-size:12.5px;color:var(--text-muted);margin-top:6px;}
+  .role-btn{width:100%;padding:18px 20px;border-radius:18px;border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;text-align:left;box-shadow:var(--shadow);}
+  .role-btn.dark{background:var(--text);border-color:var(--text);color:var(--bg);}
+  .role-btn .t1{font-weight:800;font-size:14.5px;} .role-btn .t2{font-size:12px;margin-top:3px;opacity:0.65;}
+  .field{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:13px 15px;margin-bottom:8px;}
+  .field.err{border-color:var(--danger);}
+  .field input{width:100%;border:none;outline:none;background:transparent;font-size:14.5px;color:var(--text);}
+  .hint{font-size:12px;color:var(--text-muted);margin:2px 4px 22px;line-height:1.5;}
+  .error-text{font-size:12px;color:var(--danger);margin:0 4px 16px;}
+  .btn-cta{width:100%;padding:15px;border-radius:14px;font-size:14.5px;font-weight:800;border:2px solid var(--accent);background:var(--accent);color:var(--accent-ink);}
+  .btn-cta[disabled]{background:var(--surface);color:var(--text-muted);border-color:var(--border);cursor:not-allowed;}
+  .btn-dark-cta{width:100%;padding:15px;border-radius:14px;font-size:14.5px;font-weight:800;background:var(--text);color:var(--bg);border:2px solid var(--text);}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:22px 20px 10px;}
+  .topbar .date{font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:6px;}
+  .topbar h1{font-size:18px;font-weight:800;}
+  .topbar-right{display:flex;align-items:center;gap:10px;}
+  .link-btn{background:none;border:none;font-size:12px;color:var(--text-muted);text-decoration:underline;padding:0;}
+  .live-dot{width:7px;height:7px;border-radius:999px;background:var(--accent);display:inline-block;box-shadow:0 0 0 0 var(--accent);animation:pulse 1.8s infinite;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(122,70,32,0.45);}70%{box-shadow:0 0 0 5px rgba(122,70,32,0);}100%{box-shadow:0 0 0 0 rgba(122,70,32,0);}}
+  .segmented{margin:16px 20px;background:var(--surface-2);border-radius:999px;padding:4px;display:flex;gap:2px;}
+  .segmented button{flex:1;padding:9px;border:none;border-radius:999px;background:transparent;font-size:13.5px;font-weight:700;color:var(--text-muted);}
+  .segmented button.on{background:var(--text);color:var(--bg);}
+  .px{padding-left:20px;padding-right:20px;}
+  .shift-row{display:flex;gap:8px;margin-bottom:16px;}
+  .shift-btn{flex:1;padding:11px;border-radius:14px;font-size:13.5px;font-weight:700;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);}
+  .shift-btn.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);}
+  .progress-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .progress-row span{font-size:12px;color:var(--text-muted);}
+  .progress-track{width:112px;height:6px;background:var(--surface-2);border-radius:999px;overflow:hidden;}
+  .progress-fill{height:100%;background:var(--accent);border-radius:999px;transition:width .2s;}
+  .item-row{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:13px 14px;margin-bottom:9px;display:flex;align-items:flex-start;gap:11px;}
+  .item-row.done{border-color:var(--accent-soft);background:var(--accent-soft);}
+  .check-box{margin-top:2px;flex:none;width:21px;height:21px;border-radius:7px;border:1.5px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;color:var(--accent-ink);}
+  .check-box.on{background:var(--accent);border-color:var(--accent);}
+  .item-body{flex:1;min-width:0;}
+  .item-label-row{display:flex;align-items:center;gap:6px;}
+  .item-label-row span{font-size:13.5px;line-height:1.4;}
+  .req-icon{color:var(--danger);flex:none;}
+  .req-text{font-size:11.5px;color:var(--danger);margin-top:4px;}
+  .photo-block{margin-top:8px;display:flex;align-items:center;gap:9px;}
+  .photo-block img{height:60px;width:60px;object-fit:cover;border-radius:10px;border:1px solid var(--border);}
+  .photo-meta{font-size:11px;color:var(--text-muted);}
+  .photo-meta button{display:block;margin-top:3px;color:var(--danger);background:none;border:none;padding:0;font-size:11px;text-decoration:underline;}
+  .item-actions{flex:none;}
+  .icon-btn{width:32px;height:32px;border-radius:10px;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text);}
+  .submit-note{font-size:11.5px;text-align:center;color:var(--text-muted);margin-top:9px;}
+  .empty{text-align:center;padding:64px 20px;color:var(--text-muted);}
+  .empty .glyph{color:var(--border);margin-bottom:8px;} .empty p{font-size:13.5px;} .empty p.sub{font-size:12px;margin-top:4px;}
+  .sub-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:13px 15px;margin-bottom:9px;}
+  .sub-card-top{display:flex;align-items:center;justify-content:space-between;}
+  .sub-card .name{font-size:13.5px;font-weight:700;} .sub-card .meta{font-size:11.5px;color:var(--text-muted);margin-top:3px;}
+  .badge{font-size:11px;font-weight:800;padding:4px 9px;border-radius:999px;flex:none;white-space:nowrap;}
+  .badge-pending{background:var(--surface-2);color:var(--text-muted);}
+  .badge-approved{background:var(--accent-soft);color:var(--accent);}
+  .badge-rejected{background:var(--danger-soft);color:var(--danger);}
+  .reject-note{font-size:11.5px;color:var(--danger);margin-top:8px;background:var(--danger-soft);border-radius:10px;padding:8px 10px;}
+  .lock-glyph{color:var(--text);}
+  .mgr-tabs{display:flex;gap:6px;overflow-x:auto;padding:0 20px 8px;margin-bottom:6px;}
+  .mgr-tabs::-webkit-scrollbar{display:none;}
+  .mgr-tab{flex:none;display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);white-space:nowrap;}
+  .mgr-tab.on{background:var(--text);color:var(--bg);border-color:var(--text);}
+  .tab-desc{font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.5;}
+  .add-row{display:flex;gap:8px;margin-bottom:4px;}
+  .add-row input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:11px 13px;font-size:13.5px;color:var(--text);outline:none;}
+  .add-row .add-btn{width:40px;height:40px;border-radius:14px;background:var(--text);color:var(--bg);border:none;display:flex;align-items:center;justify-content:center;flex:none;}
+  .target-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:13px 15px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;}
+  .target-card .name{font-size:13.5px;font-weight:700;display:flex;align-items:center;gap:6px;}
+  .tag-off{font-size:10.5px;font-weight:600;color:var(--text-muted);background:var(--surface-2);padding:2px 7px;border-radius:999px;}
+  .target-card .meta{font-size:11.5px;color:var(--text-muted);margin-top:3px;}
+  .trash-btn{background:none;border:none;color:var(--text-muted);padding:4px;}
+  .chip-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:14px;}
+  .chip{flex:none;padding:7px 13px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);}
+  .chip.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);}
+  .chip.on.neutral{background:var(--text);color:var(--bg);border-color:var(--text);}
+  .item-edit-row{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:11px 13px;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+  .item-edit-row .lbl{flex:1;font-size:13.5px;}
+  .req-toggle{font-size:10.5px;font-weight:800;padding:5px 8px;border-radius:999px;display:flex;align-items:center;gap:4px;flex:none;border:none;}
+  .req-toggle.on{background:var(--danger-soft);color:var(--danger);} .req-toggle.off{background:var(--surface-2);color:var(--text-muted);}
+  .cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .cal-nav button{background:none;border:none;color:var(--text-muted);font-size:18px;padding:2px 10px;} .cal-nav p{font-size:14px;font-weight:800;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;}
+  .cal-dow{text-align:center;font-size:11px;color:var(--text-muted);font-weight:700;padding:4px 0;}
+  .cal-day{aspect-ratio:1;border-radius:10px;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);}
+  .cal-day.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);}
+  .cal-day.today{box-shadow:0 0 0 2px var(--ring);}
+  .cal-note{font-size:11.5px;color:var(--text-muted);margin-top:12px;}
+  .due-card{background:var(--surface);border:2px solid var(--danger);border-radius:14px;padding:14px 15px;margin-bottom:10px;}
+  .due-card .name{font-size:13.5px;font-weight:700;} .due-card .meta{font-size:11.5px;color:var(--text-muted);margin:4px 0 12px;}
+  .due-actions{display:flex;gap:8px;} .due-actions button{flex:1;padding:10px;border-radius:10px;font-size:12px;font-weight:800;border:none;}
+  .btn-release{background:var(--accent);color:var(--accent-ink);} .btn-extend{background:var(--text);color:var(--bg);}
+  .upcoming-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px 15px;margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;}
+  .upcoming-card .name{font-size:13.5px;font-weight:700;} .upcoming-card .meta{font-size:11.5px;color:var(--text-muted);}
+  .section-label{font-size:11.5px;font-weight:800;color:var(--text-muted);margin-bottom:8px;letter-spacing:.02em;}
+  .section-label.warn{color:var(--danger);}
+  .review-row{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:10px 15px;margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;}
+  .review-row .name{font-size:13px;font-weight:700;} .review-row .meta{font-size:11px;color:var(--text-muted);}
+  .decision-badge{font-size:10.5px;font-weight:800;padding:4px 9px;border-radius:999px;}
+  .decision-release{background:var(--accent-soft);color:var(--accent);} .decision-continue{background:var(--danger-soft);color:var(--danger);}
+  .date-group{margin-bottom:16px;} .date-group .date-h{font-size:11.5px;font-weight:800;color:var(--text-muted);margin-bottom:6px;}
+  .arch-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:8px;overflow:hidden;}
+  .arch-top{width:100%;display:flex;align-items:center;justify-content:space-between;padding:10px 15px;background:none;border:none;text-align:left;color:var(--text);}
+  .arch-top .left{display:flex;align-items:center;gap:8px;} .arch-top .staff{font-size:13.5px;font-weight:700;} .arch-top .shift{font-size:11.5px;color:var(--text-muted);}
+  .arch-top .right{display:flex;align-items:center;gap:7px;color:var(--danger);}
+  .arch-detail{padding:0 15px 12px;border-top:1px solid var(--border);}
+  .arch-detail p{font-size:12px;padding-top:8px;} .arch-detail p.miss{color:var(--danger);}
+  .accordion-body{padding:0 15px 14px;border-top:1px solid var(--border);padding-top:11px;}
+  .accordion-item{display:flex;align-items:flex-start;gap:9px;margin-bottom:11px;}
+  .accordion-check{margin-top:2px;flex:none;width:17px;height:17px;border-radius:5px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;color:var(--accent-ink);}
+  .accordion-check.on{background:var(--accent);}
+  .accordion-item .txt{font-size:12px;} .accordion-item .txt.miss{color:var(--danger);}
+  .accordion-item img{height:52px;width:52px;object-fit:cover;border-radius:8px;border:1px solid var(--border);margin-top:5px;}
+  .no-photo{font-size:11px;color:var(--danger);display:flex;align-items:center;gap:4px;margin-top:5px;}
+  .note-input{width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:9px 11px;font-size:12px;color:var(--text);outline:none;margin-top:2px;}
+  .decide-row{display:flex;gap:8px;margin-top:10px;} .decide-row button{flex:1;padding:10px;border-radius:10px;font-size:12px;font-weight:800;border:none;}
+  .btn-reject{background:var(--danger);color:#fff;} .btn-approve{background:var(--accent);color:var(--accent-ink);}
+  .backup-row{margin:0 0 16px;} .backup-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:11px;border-radius:12px;font-size:12.5px;font-weight:700;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);}
+  .setup-wrap{max-width:520px;margin:0 auto;padding:40px 24px;}
+  .setup-wrap h1{font-size:18px;font-weight:800;margin-bottom:10px;}
+  .setup-wrap p{font-size:13px;color:var(--text-muted);line-height:1.7;margin-bottom:10px;}
+  .setup-wrap code{background:var(--surface-2);padding:2px 6px;border-radius:6px;font-size:12.5px;}
+  .setup-wrap ol{font-size:13px;color:var(--text);line-height:1.9;padding-left:20px;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<!-- Firebase (Firestore) — real-time shared database -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+/* =========================================================
+   1) FIREBASE 설정 — 반드시 아래 값을 본인 프로젝트 값으로 교체하세요.
+   Firebase 콘솔 > 프로젝트 설정 > 일반 > 내 앱 > SDK 설정 및 구성 에서 복사
+   (README.md 참고)
+========================================================= */
+var FIREBASE_CONFIG = {
+  apiKey: "",
+  authDomain: "",
+  projectId: "",
+  storageBucket: "",
+  messagingSenderId: "",
+  appId: ""
+};
+</script>
+
+<script>
+(function(){
+  "use strict";
+
+  if(!FIREBASE_CONFIG.apiKey){
+    document.getElementById("app").innerHTML =
+      '<div class="setup-wrap">' +
+        '<h1>설정이 필요해요</h1>' +
+        '<p>이 앱은 Firebase(Firestore)를 실시간 공유 데이터베이스로 사용해요. 아직 연결 정보가 입력되지 않았어요.</p>' +
+        '<ol>' +
+          '<li><code>firebase.google.com</code>에서 무료 프로젝트를 만들어요</li>' +
+          '<li>Firestore Database를 생성해요 (테스트 모드)</li>' +
+          '<li>프로젝트 설정 &gt; 내 앱 &gt; 웹 앱 추가 후 SDK 설정 값을 복사해요</li>' +
+          '<li><code>index.html</code> 상단의 <code>FIREBASE_CONFIG</code> 값을 채워넣고 다시 배포해요</li>' +
+        '</ol>' +
+        '<p>자세한 단계는 함께 제공된 README.md 파일을 참고하세요.</p>' +
+      '</div>';
+    return;
+  }
+
+  var app = firebase.initializeApp(FIREBASE_CONFIG);
+  var db = firebase.firestore();
+
+  /* ---------- constants ---------- */
+  var DEFAULT_ITEMS = {
+    open: [
+      { id:"o1", label:"매장 조명 · 간판 점등", photoRequired:true },
+      { id:"o2", label:"냉장/냉동고 온도 확인", photoRequired:true },
+      { id:"o3", label:"원두 · 시럽 재고 확인", photoRequired:false },
+      { id:"o4", label:"테이블 · 의자 정돈", photoRequired:false },
+      { id:"o5", label:"화장실 청결 확인", photoRequired:true }
+    ],
+    close: [
+      { id:"c1", label:"커피머신 세척", photoRequired:true },
+      { id:"c2", label:"냉장고 재고 정리", photoRequired:false },
+      { id:"c3", label:"테이블 · 바닥 청소", photoRequired:true },
+      { id:"c4", label:"쓰레기통 비우기", photoRequired:false },
+      { id:"c5", label:"매장 문단속 · 소등", photoRequired:true }
+    ]
+  };
+  var MANAGER_PW = "0001";
+  var DOW = ["일","월","화","수","목","금","토"];
+  var MTABS = [
+    { k:"inbox", label:"제출함", icon:"inbox" },
+    { k:"targets", label:"대상자", icon:"star" },
+    { k:"items", label:"항목 관리", icon:"sliders" },
+    { k:"calendar", label:"근무 캘린더", icon:"calendar" },
+    { k:"review", label:"2주차 검토", icon:"rotateCcw" },
+    { k:"archive", label:"보관소", icon:"archive" }
+  ];
+
+  /* ---------- helpers ---------- */
+  function pad(n){ return String(n).padStart(2,"0"); }
+  function todayISO(){ var d=new Date(); return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+  function nowTime(){ var d=new Date(); return pad(d.getHours())+":"+pad(d.getMinutes()); }
+  function fmtDate(s){
+    if(!s) return "";
+    var p=s.split("-").map(Number), y=p[0],m=p[1],d=p[2];
+    var wd = DOW[new Date(y,m-1,d).getDay()];
+    return m+"."+d+" ("+wd+")";
+  }
+  function daysBetween(a,b){
+    var pa=a.split("-").map(Number), pb=b.split("-").map(Number);
+    var da=new Date(pa[0],pa[1]-1,pa[2]), db2=new Date(pb[0],pb[1]-1,pb[2]);
+    return Math.floor((db2-da)/86400000);
+  }
+  function clone(o){ return JSON.parse(JSON.stringify(o)); }
+  function docIdFor(name){ return String(name).replace(/[\/\s]+/g,"_"); }
+  function escapeHtml(s){
+    return String(s==null?"":s).replace(/[&<>"']/g,function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+  function compressImage(file, maxDim, quality){
+    return new Promise(function(resolve,reject){
+      var reader = new FileReader();
+      reader.onload = function(){
+        var img = new Image();
+        img.onload = function(){
+          var w=img.width, h=img.height;
+          if(w>h){ if(w>maxDim){ h=Math.round(h*maxDim/w); w=maxDim; } }
+          else { if(h>maxDim){ w=Math.round(w*maxDim/h); h=maxDim; } }
+          var canvas = document.createElement("canvas");
+          canvas.width=w; canvas.height=h;
+          canvas.getContext("2d").drawImage(img,0,0,w,h);
+          resolve(canvas.toDataURL("image/jpeg", quality));
+        };
+        img.onerror = reject;
+        img.src = reader.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function icon(name, size, extraClass){
+    size = size||16;
+    var common = 'width="'+size+'" height="'+size+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block"';
+    var cls = extraClass ? ' class="'+extraClass+'"' : '';
+    var paths = {
+      camera:'<path d="M4 8h3l2-2h6l2 2h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.3"/>',
+      check:'<polyline points="20 6 9 17 4 12"/>',
+      x:'<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+      chevronDown:'<polyline points="6 9 12 15 18 9"/>',
+      chevronRight:'<polyline points="9 6 15 12 9 18"/>',
+      plus:'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+      trash:'<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',
+      lock:'<rect x="5" y="10.5" width="14" height="9.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/>',
+      user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/>',
+      clipboardCheck:'<rect x="6" y="4" width="12" height="16" rx="2"/><path d="M9 4V3.5A1.5 1.5 0 0 1 10.5 2h3A1.5 1.5 0 0 1 15 3.5V4"/><polyline points="9 13 11 15 15 10"/>',
+      alertCircle:'<circle cx="12" cy="12" r="9"/><line x1="12" y1="7.5" x2="12" y2="13"/><circle cx="12" cy="16.3" r="1" fill="currentColor" stroke="none"/>',
+      calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><line x1="16" y1="3" x2="16" y2="7"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="3" y1="10" x2="21" y2="10"/>',
+      inbox:'<path d="M3 10.5L5 5h14l2 5.5"/><path d="M3 10.5V18a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7.5"/><path d="M3 10.5h5.2l1.3 2.5h4.9l1.3-2.5H21"/>',
+      archive:'<rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8"/><line x1="10" y1="13" x2="14" y2="13"/>',
+      rotateCcw:'<path d="M4 12a8 8 0 1 0 2.6-5.9"/><polyline points="4 4.5 4 9 8.5 9"/>',
+      sliders:'<line x1="4" y1="6" x2="20" y2="6"/><circle cx="14" cy="6" r="2"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="8" cy="12" r="2"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="16" cy="18" r="2"/>',
+      arrowLeft:'<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>',
+      imageOff:'<path d="M3 3l18 18"/><path d="M21 15V6a2 2 0 0 0-2-2H9"/><path d="M3 9v10a2 2 0 0 0 2 2h10"/><circle cx="9" cy="9" r="1.3"/>',
+      star:'<polygon points="12 2.5 14.9 8.6 21.5 9.4 16.7 13.9 18 20.5 12 17.2 6 20.5 7.3 13.9 2.5 9.4 9.1 8.6"/>',
+      download:'<path d="M12 3v11.5"/><polyline points="7.5 10 12 14.5 16.5 10"/><path d="M5 19h14"/>'
+    };
+    return '<svg '+common+cls+'>'+(paths[name]||"")+"</svg>";
+  }
+
+  /* ---------- local (per-device) identity ---------- */
+  function loadMe(){ try{ return localStorage.getItem("ccl_me")||null; }catch(e){ return null; } }
+  function saveMe(n){ try{ localStorage.setItem("ccl_me", n); }catch(e){} }
+  function clearMe(){ try{ localStorage.removeItem("ccl_me"); }catch(e){} }
+
+  function itemsFor(staffName){ return state.data.items[staffName] || DEFAULT_ITEMS; }
+
+  /* ---------- state ---------- */
+  var state = {
+    role: null,
+    data: { targets:[], items:{}, submissions:[], reviews:[], calendars:{} },
+    ready: false,
+    me: loadMe(),
+
+    staffTab: "today", shift: "open",
+    checked: {}, photos: {}, photoMeta: {},
+    justSubmitted: false,
+
+    managerAuthed: false, managerPwError: false, managerTab: "inbox",
+
+    inboxOpenId: null, targetsError: "",
+    itemsSelected: null, itemsShift: "open",
+    calSelected: null,
+    calCursor: (function(){ var d=new Date(); return { y:d.getFullYear(), m:d.getMonth() }; })(),
+    archiveFilter: "all", archiveOpenId: null
+  };
+
+  /* ---------- firestore listeners (real-time sync) ---------- */
+  var readyFlags = { targets:false, items:false, submissions:false, reviews:false, calendars:false };
+  function markReady(k){ readyFlags[k]=true; if(Object.values(readyFlags).every(Boolean)){ state.ready = true; } render(); }
+
+  db.collection("targets").onSnapshot(function(snap){
+    state.data.targets = snap.docs.map(function(d){ return d.data(); });
+    markReady("targets");
+  }, function(err){ showConnError(err); });
+
+  db.collection("items").onSnapshot(function(snap){
+    var obj = {};
+    snap.forEach(function(d){ obj[d.id] = d.data(); });
+    state.data.items = obj;
+    markReady("items");
+  }, function(err){ showConnError(err); });
+
+  db.collection("submissions").onSnapshot(function(snap){
+    var arr = snap.docs.map(function(d){ return Object.assign({ id:d.id }, d.data()); });
+    arr.sort(function(a,b){ return (b.date+b.time) > (a.date+a.time) ? 1 : -1; });
+    state.data.submissions = arr;
+    markReady("submissions");
+  }, function(err){ showConnError(err); });
+
+  db.collection("reviews").onSnapshot(function(snap){
+    var arr = snap.docs.map(function(d){ return d.data(); });
+    arr.sort(function(a,b){ return b.decidedAt > a.decidedAt ? 1 : -1; });
+    state.data.reviews = arr;
+    markReady("reviews");
+  }, function(err){ showConnError(err); });
+
+  db.collection("calendars").onSnapshot(function(snap){
+    var obj = {};
+    snap.forEach(function(d){ obj[d.id] = (d.data()||{}).marks || {}; });
+    state.data.calendars = obj;
+    markReady("calendars");
+  }, function(err){ showConnError(err); });
+
+  var connError = null;
+  function showConnError(err){
+    connError = (err && err.message) ? err.message : "연결에 실패했어요";
+    render();
+  }
+
+  /* ---------- render root ---------- */
+  function render(){
+    document.getElementById("app").innerHTML = screenHTML();
+  }
+
+  function screenHTML(){
+    if(connError){
+      return '<div class="setup-wrap"><h1>연결에 문제가 있어요</h1><p>'+escapeHtml(connError)+'</p>' +
+        '<p>Firestore 보안 규칙과 FIREBASE_CONFIG 값을 다시 확인해주세요. (README.md 참고)</p></div>';
+    }
+    if(!state.ready){
+      return '<div class="screen-center"><div class="brand-head"><div class="glyph">'+icon("clipboardCheck",30)+'</div><p>불러오는 중…</p></div></div>';
+    }
+    if(!state.role) return roleGateHTML();
+    if(state.role==="staff") return staffAppHTML();
+    return managerAppHTML();
+  }
+
+  /* ---------- role gate ---------- */
+  function roleGateHTML(){
+    return (
+      '<div class="screen-center">' +
+        '<div class="brand-head">' +
+          '<div class="glyph">'+icon("clipboardCheck",30)+'</div>' +
+          '<h1>업무 체크리스트 시스템</h1>' +
+          '<p>오픈 · 마감 업무 확인 관리</p>' +
+        '</div>' +
+        '<button type="button" class="role-btn" data-action="pickRole" data-role="staff">' +
+          '<div><p class="t1">스텝으로 들어가기</p><p class="t2">내 체크리스트 작성 · 기록 확인</p></div>' +
+          icon("chevronRight",18) +
+        '</button>' +
+        '<button type="button" class="role-btn dark" data-action="pickRole" data-role="manager">' +
+          '<div><p class="t1">매니저로 들어가기</p><p class="t2">승인 · 대상자 · 항목 관리</p></div>' +
+          icon("lock",16) +
+        '</button>' +
+      '</div>'
+    );
+  }
+
+  /* ---------- staff ---------- */
+  function staffAppHTML(){ return state.me ? staffHomeHTML() : staffNameEntryHTML(); }
+
+  function staffNameEntryHTML(){
+    return (
+      '<div style="padding:24px 24px 40px;min-height:100vh;display:flex;flex-direction:column;">' +
+        '<button type="button" class="back-link" data-action="exitToGate">'+icon("arrowLeft",14)+' 처음으로</button>' +
+        '<div style="flex:1;display:flex;flex-direction:column;justify-content:center;">' +
+          '<div style="text-align:center;margin-bottom:24px;">' +
+            '<div style="color:var(--accent);margin-bottom:8px;">'+icon("user",26)+'</div>' +
+            '<h2 style="font-size:18px;font-weight:800;">이름을 입력해주세요</h2>' +
+          '</div>' +
+          '<div class="field"><input id="nameInput" autofocus placeholder="예: 김민준" /></div>' +
+          '<p class="hint">ⓘ 성을 포함한 전체 이름(풀네임)으로 입력해주세요. 다음부터는 자동으로 기억돼요.</p>' +
+          '<button type="button" class="btn-cta" data-action="staffLogin">시작하기</button>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  function liveBadge(){
+    return '<span class="date"><span class="live-dot"></span>실시간 동기화</span>';
+  }
+
+  function staffHomeHTML(){
+    var name = state.me;
+    var target = state.data.targets.find(function(t){ return t.name===name && t.active; });
+    var items = itemsFor(name);
+    var currentItems = items[state.shift] || [];
+    var doneCount = currentItems.filter(function(it){ return state.checked[it.id]; }).length;
+    var canSubmitAll = currentItems.length>0 && currentItems.every(function(it){
+      return state.checked[it.id] && (!it.photoRequired || state.photos[it.id]);
+    });
+    var mySubs = state.data.submissions.filter(function(s){ return s.staff===name; });
+
+    var html = '';
+    html += '<div class="topbar"><div>'+liveBadge()+'<h1>'+escapeHtml(name)+'님</h1></div>';
+    html += '<div class="topbar-right"><button type="button" class="link-btn" data-action="switchName">이름 변경</button></div></div>';
+
+    html += '<div class="segmented">';
+    html += '<button data-action="staffTab" data-tab="today" class="'+(state.staffTab==="today"?"on":"")+'">오늘 체크리스트</button>';
+    html += '<button data-action="staffTab" data-tab="history" class="'+(state.staffTab==="history"?"on":"")+'">내 기록</button>';
+    html += '</div>';
+
+    if(state.staffTab==="today"){
+      if(!target){
+        html += '<div class="empty">'+icon("clipboardCheck",26)+'<p>현재 체크리스트 수행 대상자가 아니에요.</p><p class="sub">평소처럼 업무해주시면 됩니다.</p></div>';
+      } else {
+        html += '<div class="px">';
+        html += '<div class="shift-row">';
+        html += '<button class="shift-btn '+(state.shift==="open"?"on":"")+'" data-action="setShift" data-shift="open">오픈 체크</button>';
+        html += '<button class="shift-btn '+(state.shift==="close"?"on":"")+'" data-action="setShift" data-shift="close">마감 체크</button>';
+        html += '</div>';
+        html += '<div class="progress-row"><span>'+doneCount+' / '+currentItems.length+' 완료</span><div class="progress-track"><div class="progress-fill" style="width:'+(currentItems.length? (doneCount/currentItems.length*100):0)+'%"></div></div></div>';
+        html += '<div>';
+        currentItems.forEach(function(it){
+          var checked = !!state.checked[it.id];
+          var photo = state.photos[it.id];
+          html += '<div class="item-row '+(checked?"done":"")+'">';
+          html += '<button class="check-box '+(checked?"on":"")+'" data-action="toggleItem" data-id="'+it.id+'">'+(checked?icon("check",13):"")+'</button>';
+          html += '<div class="item-body"><div class="item-label-row"><span>'+escapeHtml(it.label)+'</span>'+(it.photoRequired?icon("camera",11,"req-icon"):"")+'</div>';
+          if(photo){
+            html += '<div class="photo-block"><img src="'+photo+'" alt="" /><div class="photo-meta">촬영 '+(state.photoMeta[it.id]||"")+'<button data-action="removePhoto" data-id="'+it.id+'">삭제</button></div></div>';
+          } else if(it.photoRequired){
+            html += '<p class="req-text">사진 촬영 필수 항목</p>';
+          }
+          html += '</div>';
+          html += '<div class="item-actions"><button type="button" class="icon-btn" data-action="openCamera" data-id="'+it.id+'">'+icon("camera",15)+'</button>';
+          html += '<input type="file" accept="image/*" capture="environment" class="hidden-file" data-photo-input="'+it.id+'" /></div>';
+          html += '</div>';
+        });
+        html += '</div>';
+        html += '<button type="button" class="btn-cta" data-action="submitChecklist" '+((currentItems.length===0)?"disabled":"")+' style="background:'+(canSubmitAll?"var(--accent)":"var(--text)")+';border-color:'+(canSubmitAll?"var(--accent)":"var(--text)")+';color:'+(canSubmitAll?"var(--accent-ink)":"var(--bg)")+'">';
+        html += state.justSubmitted ? "제출 완료 ✓ 매니저 확인 대기중" : (canSubmitAll ? "체크리스트 제출" : "미완료 항목 있음 · 제출");
+        html += '</button>';
+        html += '<p class="submit-note">사진은 카메라로 바로 촬영한 것만 첨부돼요 (앨범 선택 불가)</p>';
+        html += '</div>';
+      }
+    } else {
+      html += '<div class="px">';
+      if(mySubs.length===0){
+        html += '<div class="empty">'+icon("archive",24)+'<p>아직 제출 기록이 없어요</p></div>';
+      } else {
+        mySubs.forEach(function(s){
+          html += '<div class="sub-card"><div class="sub-card-top"><p class="name">'+fmtDate(s.date)+' · '+(s.shift==="open"?"오픈":"마감")+'</p>'+statusBadge(s.status)+'</div>';
+          var doneN = s.items.filter(function(i){return i.done;}).length;
+          html += '<p class="meta">'+doneN+'/'+s.items.length+' 완료 · '+s.time+' 제출</p>';
+          if(s.status==="rejected" && s.reviewNote){ html += '<p class="reject-note">반려 사유: '+escapeHtml(s.reviewNote)+'</p>'; }
+          html += '</div>';
+        });
+      }
+      html += '</div>';
+    }
+    return html;
+  }
+
+  function statusBadge(status){
+    var map = { pending:["확인 대기","badge-pending"], approved:["승인","badge-approved"], rejected:["반려","badge-rejected"] };
+    var m = map[status]||map.pending;
+    return '<span class="badge '+m[1]+'">'+m[0]+'</span>';
+  }
+
+  /* ---------- manager ---------- */
+  function managerAppHTML(){ return state.managerAuthed ? managerHomeHTML() : managerLoginHTML(); }
+
+  function managerLoginHTML(){
+    return (
+      '<div style="padding:24px 24px 40px;min-height:100vh;display:flex;flex-direction:column;">' +
+        '<button type="button" class="back-link" data-action="exitToGate">'+icon("arrowLeft",14)+' 처음으로</button>' +
+        '<div style="flex:1;display:flex;flex-direction:column;justify-content:center;">' +
+          '<div style="text-align:center;margin-bottom:24px;">' +
+            '<div class="lock-glyph" style="margin-bottom:8px;">'+icon("lock",26)+'</div>' +
+            '<h2 style="font-size:18px;font-weight:800;">매니저 로그인</h2>' +
+            '<p style="font-size:12px;color:var(--text-muted);margin-top:4px;">비밀번호를 입력해주세요</p>' +
+          '</div>' +
+          '<div class="field '+(state.managerPwError?"err":"")+'"><input id="pwInput" type="password" autofocus placeholder="••••" style="letter-spacing:0.3em;" /></div>' +
+          (state.managerPwError ? '<p class="error-text">비밀번호가 올바르지 않아요</p>' : '<div style="margin-bottom:16px;"></div>') +
+          '<button type="button" class="btn-dark-cta" data-action="managerLogin">로그인</button>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  function managerHomeHTML(){
+    var html = '';
+    html += '<div class="topbar"><div>'+liveBadge()+'<h1>체크리스트 관리</h1></div>';
+    html += '<div class="topbar-right"><button type="button" class="link-btn" data-action="exitToGate">나가기</button></div></div>';
+
+    html += '<div class="mgr-tabs">';
+    MTABS.forEach(function(t){
+      html += '<button type="button" class="mgr-tab '+(state.managerTab===t.k?"on":"")+'" data-action="mgrTab" data-tab="'+t.k+'">'+icon(t.icon,12)+' '+t.label+'</button>';
+    });
+    html += '</div>';
+
+    html += '<div class="px">';
+    if(state.managerTab==="inbox") html += inboxTabHTML();
+    else if(state.managerTab==="targets") html += targetsTabHTML();
+    else if(state.managerTab==="items") html += itemsTabHTML();
+    else if(state.managerTab==="calendar") html += calendarTabHTML();
+    else if(state.managerTab==="review") html += reviewTabHTML();
+    else if(state.managerTab==="archive") html += archiveTabHTML();
+    html += '</div>';
+    return html;
+  }
+
+  function inboxTabHTML(){
+    var pending = state.data.submissions.filter(function(s){ return s.status==="pending"; });
+    if(pending.length===0){
+      return '<div class="empty">'+icon("inbox",24)+'<p>확인 대기 중인 제출이 없어요</p></div>';
+    }
+    var html = '';
+    pending.forEach(function(s){
+      var isOpen = state.inboxOpenId===s.id;
+      var total = s.items.length, done = s.items.filter(function(i){return i.done;}).length;
+      html += '<div class="arch-card"><button type="button" class="arch-top" data-action="toggleInbox" data-id="'+s.id+'">';
+      html += '<div><p class="staff">'+escapeHtml(s.staff)+' · '+(s.shift==="open"?"오픈":"마감")+'</p><p class="shift">'+fmtDate(s.date)+' '+s.time+' · '+done+'/'+total+' 완료</p></div>';
+      html += icon(isOpen?"chevronDown":"chevronRight",16);
+      html += '</button>';
+      if(isOpen){
+        html += '<div class="accordion-body">';
+        s.items.forEach(function(it){
+          html += '<div class="accordion-item"><div class="accordion-check '+(it.done?"on":"")+'">'+(it.done?icon("check",10):"")+'</div>';
+          html += '<div style="flex:1;"><p class="txt '+(it.done?"":"miss")+'">'+escapeHtml(it.label)+'</p>';
+          if(it.photo){ html += '<div style="display:flex;align-items:center;gap:8px;"><img src="'+it.photo+'" /><span style="font-size:11px;color:var(--text-muted);">촬영 '+(it.photoTime||"")+'</span></div>'; }
+          else if(it.photoRequired){ html += '<span class="no-photo">'+icon("imageOff",10)+' 필수 사진 없음</span>'; }
+          html += '</div></div>';
+        });
+        html += '<input type="text" class="note-input" id="rejectNote_'+s.id+'" placeholder="반려 시 사유 (선택)" />';
+        html += '<div class="decide-row"><button type="button" class="btn-reject" data-action="decide" data-id="'+s.id+'" data-status="rejected">반려</button>';
+        html += '<button type="button" class="btn-approve" data-action="decide" data-id="'+s.id+'" data-status="approved">승인</button></div>';
+        html += '</div>';
+      }
+      html += '</div>';
+    });
+    return html;
+  }
+
+  function targetsTabHTML(){
+    var html = '<p class="tab-desc">체크리스트를 수행해야 하는 스텝을 지정하세요. 지정일부터 2주 주기가 시작돼요.</p>';
+    html += '<div class="add-row"><input id="newTargetName" placeholder="스텝 이름 (풀네임)" /><button type="button" class="add-btn" data-action="addTarget">'+icon("plus",16)+'</button></div>';
+    html += state.targetsError ? '<p class="error-text">'+escapeHtml(state.targetsError)+'</p>' : '<div style="margin-bottom:16px;"></div>';
+    if(state.data.targets.length===0){
+      html += '<p style="text-align:center;color:var(--text-muted);font-size:13.5px;padding:32px 0;">지정된 대상자가 없어요</p>';
+    } else {
+      state.data.targets.forEach(function(t){
+        html += '<div class="target-card"><div><p class="name">'+escapeHtml(t.name)+(!t.active?'<span class="tag-off">해제됨</span>':'')+'</p>';
+        html += '<p class="meta">지정일 '+fmtDate(t.startDate)+' · '+(t.active?(daysBetween(t.startDate,todayISO())+"일째"):"종료")+'</p></div>';
+        html += '<button type="button" class="trash-btn" data-action="removeTarget" data-name="'+escapeHtml(t.name)+'">'+icon("trash",15)+'</button></div>';
+      });
+    }
+    return html;
+  }
+
+  function itemsTabHTML(){
+    var targets = state.data.targets;
+    if(targets.length===0) return '<p style="text-align:center;color:var(--text-muted);font-size:13.5px;padding:32px 0;">먼저 대상자 탭에서 스텝을 지정해주세요</p>';
+    if(!state.itemsSelected || !targets.some(function(t){return t.name===state.itemsSelected;})) state.itemsSelected = targets[0].name;
+    var selected = state.itemsSelected;
+    var items = itemsFor(selected);
+    var shift = state.itemsShift;
+
+    var html = '<div class="chip-row">';
+    targets.forEach(function(t){
+      html += '<button type="button" class="chip '+(selected===t.name?"on":"")+'" data-action="selectItemsStaff" data-name="'+escapeHtml(t.name)+'">'+escapeHtml(t.name)+'</button>';
+    });
+    html += '</div>';
+
+    html += '<div class="shift-row">';
+    html += '<button class="shift-btn '+(shift==="open"?"on":"")+'" data-action="setItemsShift" data-shift="open">오픈 항목</button>';
+    html += '<button class="shift-btn '+(shift==="close"?"on":"")+'" data-action="setItemsShift" data-shift="close">마감 항목</button>';
+    html += '</div>';
+
+    (items[shift]||[]).forEach(function(it){
+      html += '<div class="item-edit-row"><span class="lbl">'+escapeHtml(it.label)+'</span>';
+      html += '<button type="button" class="req-toggle '+(it.photoRequired?"on":"off")+'" data-action="togglePhotoReq" data-id="'+it.id+'">'+icon("camera",10)+' '+(it.photoRequired?"사진 필수":"사진 선택")+'</button>';
+      html += '<button type="button" class="trash-btn" data-action="removeChecklistItem" data-id="'+it.id+'">'+icon("trash",14)+'</button></div>';
+    });
+
+    html += '<div class="add-row"><input id="newItemLabel" placeholder="새 항목 추가" /><button type="button" class="add-btn" data-action="addChecklistItem">'+icon("plus",15)+'</button></div>';
+    return html;
+  }
+
+  function calendarTabHTML(){
+    var targets = state.data.targets;
+    if(targets.length===0) return '<p style="text-align:center;color:var(--text-muted);font-size:13.5px;padding:32px 0;">먼저 대상자 탭에서 스텝을 지정해주세요</p>';
+    if(!state.calSelected || !targets.some(function(t){return t.name===state.calSelected;})) state.calSelected = targets[0].name;
+    var selected = state.calSelected;
+    var marks = state.data.calendars[selected] || {};
+
+    var html = '<div class="chip-row">';
+    targets.forEach(function(t){
+      html += '<button type="button" class="chip '+(selected===t.name?"on":"")+'" data-action="selectCalStaff" data-name="'+escapeHtml(t.name)+'">'+escapeHtml(t.name)+'</button>';
+    });
+    html += '</div>';
+
+    var y = state.calCursor.y, m = state.calCursor.m;
+    html += '<div class="cal-nav"><button type="button" data-action="calPrev">‹</button><p>'+y+'년 '+(m+1)+'월</p><button type="button" data-action="calNext">›</button></div>';
+    html += '<div class="cal-grid">';
+    DOW.forEach(function(d){ html += '<div class="cal-dow">'+d+'</div>'; });
+    var first = new Date(y,m,1), startDow = first.getDay(), daysInMonth = new Date(y,m+1,0).getDate();
+    for(var i=0;i<startDow;i++) html += '<div></div>';
+    for(var d=1; d<=daysInMonth; d++){
+      var iso = y+"-"+pad(m+1)+"-"+pad(d);
+      var on = !!marks[iso];
+      var isToday = iso===todayISO();
+      html += '<button type="button" class="cal-day '+(on?"on":"")+' '+(isToday?"today":"")+'" data-action="toggleCalDay" data-iso="'+iso+'">'+d+'</button>';
+    }
+    html += '</div>';
+    html += '<p class="cal-note">날짜를 눌러 '+escapeHtml(selected)+'의 근무일을 표시하세요 (진한 색 = 근무)</p>';
+    return html;
+  }
+
+  function reviewTabHTML(){
+    var targets = state.data.targets;
+    var due = targets.filter(function(t){ return t.active && daysBetween(t.startDate, todayISO())>=14; });
+    var upcoming = targets.filter(function(t){ return t.active && daysBetween(t.startDate, todayISO())<14; });
+    var reviews = state.data.reviews;
+
+    var html = '';
+    if(due.length>0){
+      html += '<div class="section-label warn">검토 필요</div>';
+      due.forEach(function(t){
+        html += '<div class="due-card"><p class="name">'+escapeHtml(t.name)+'</p>';
+        html += '<p class="meta">'+fmtDate(t.startDate)+' 시작 · '+daysBetween(t.startDate,todayISO())+'일 경과 · 2주 경과됨</p>';
+        html += '<div class="due-actions"><button type="button" class="btn-release" data-action="reviewDecide" data-name="'+escapeHtml(t.name)+'" data-decision="release">개선됨 · 해제</button>';
+        html += '<button type="button" class="btn-extend" data-action="reviewDecide" data-name="'+escapeHtml(t.name)+'" data-decision="continue">2주 연장</button></div></div>';
+      });
+    }
+    if(upcoming.length>0){
+      html += '<div class="section-label" style="margin-top:'+(due.length>0?"20px":"0")+'">진행 중</div>';
+      upcoming.forEach(function(t){
+        html += '<div class="upcoming-card"><p class="name">'+escapeHtml(t.name)+'</p><p class="meta">'+(14-daysBetween(t.startDate,todayISO()))+'일 후 검토</p></div>';
+      });
+    }
+    html += '<div style="margin-top:20px;"><div class="section-label">검토 기록</div>';
+    if(reviews.length===0){
+      html += '<p style="text-align:center;color:var(--text-muted);font-size:13px;padding:20px 0;">아직 검토 기록이 없어요</p>';
+    } else {
+      reviews.forEach(function(r){
+        html += '<div class="review-row"><div><p class="name">'+escapeHtml(r.staff)+'</p><p class="meta">'+r.decidedAt+'</p></div>';
+        html += '<span class="decision-badge '+(r.decision==="release"?"decision-release":"decision-continue")+'">'+(r.decision==="release"?"개선 · 해제":"2주 연장")+'</span></div>';
+      });
+    }
+    html += '</div>';
+    return html;
+  }
+
+  function archiveTabHTML(){
+    var subs = state.data.submissions;
+    var staffNames = Array.from(new Set(subs.map(function(s){return s.staff;})));
+    var filter = state.archiveFilter;
+    var filtered = filter==="all" ? subs : subs.filter(function(s){return s.staff===filter;});
+    var byDate = {};
+    filtered.forEach(function(s){ (byDate[s.date] = byDate[s.date]||[]).push(s); });
+    var dates = Object.keys(byDate).sort().reverse();
+
+    var html = '<div class="backup-row"><button type="button" class="backup-btn" data-action="downloadBackup">'+icon("download",13)+' 전체 데이터 백업 다운로드</button></div>';
+
+    html += '<div class="chip-row">';
+    html += '<button type="button" class="chip neutral '+(filter==="all"?"on":"")+'" data-action="setArchiveFilter" data-name="all">전체</button>';
+    staffNames.forEach(function(n){
+      html += '<button type="button" class="chip neutral '+(filter===n?"on":"")+'" data-action="setArchiveFilter" data-name="'+escapeHtml(n)+'">'+escapeHtml(n)+'</button>';
+    });
+    html += '</div>';
+
+    if(dates.length===0){
+      html += '<p style="text-align:center;color:var(--text-muted);font-size:13.5px;padding:36px 0;">기록이 없어요</p>';
+      return html;
+    }
+    dates.forEach(function(date){
+      html += '<div class="date-group"><div class="date-h">'+fmtDate(date)+'</div>';
+      byDate[date].forEach(function(s){
+        var isOpen = state.archiveOpenId===s.id;
+        var missed = s.items.filter(function(i){return !i.done;});
+        html += '<div class="arch-card"><button type="button" class="arch-top" data-action="toggleArchive" data-id="'+s.id+'">';
+        html += '<div class="left"><span class="staff">'+escapeHtml(s.staff)+'</span><span class="shift">'+(s.shift==="open"?"오픈":"마감")+'</span></div>';
+        html += '<div class="right">'+(missed.length>0?icon("alertCircle",12):"")+statusBadge(s.status)+'</div></button>';
+        if(isOpen){
+          html += '<div class="arch-detail">';
+          s.items.forEach(function(it){
+            html += '<p class="'+(it.done?"":"miss")+'">'+(it.done?"✓":"✕")+' '+escapeHtml(it.label)+'</p>';
+          });
+          if(s.reviewNote){ html += '<p class="miss">반려 사유: '+escapeHtml(s.reviewNote)+'</p>'; }
+          html += '</div>';
+        }
+        html += '</div>';
+      });
+      html += '</div>';
+    });
+    return html;
+  }
+
+  /* ---------- mutations (write to Firestore; UI updates via onSnapshot) ---------- */
+  function addTarget(name){
+    var ref = db.collection("targets").doc(docIdFor(name));
+    ref.set({ name:name, startDate: todayISO(), active:true });
+    db.collection("items").doc(docIdFor(name)).get().then(function(snap){
+      if(!snap.exists) db.collection("items").doc(docIdFor(name)).set(clone(DEFAULT_ITEMS));
+    });
+    db.collection("calendars").doc(docIdFor(name)).set({ marks:{} }, { merge:true });
+  }
+  function removeTarget(name){ db.collection("targets").doc(docIdFor(name)).delete(); }
+  function saveItems(name, itemsObj){ db.collection("items").doc(docIdFor(name)).set(itemsObj); }
+  function decideSubmission(id, status, note){
+    db.collection("submissions").doc(id).update({
+      status: status, reviewNote: status==="rejected" ? note : "", reviewedAt: todayISO()+" "+nowTime()
+    });
+  }
+  function addReview(name, decision, target){
+    db.collection("reviews").add({ staff:name, cycleStart: target?target.startDate:todayISO(), decidedAt: todayISO()+" "+nowTime(), decision: decision });
+    var upd = decision==="continue" ? { startDate: todayISO() } : { active:false };
+    db.collection("targets").doc(docIdFor(name)).update(upd);
+  }
+  function toggleCalDay(name, iso, newVal){
+    var fieldPath = "marks."+iso;
+    var upd = {}; upd[fieldPath] = newVal;
+    db.collection("calendars").doc(docIdFor(name)).update(upd).catch(function(){
+      var setObj = { marks:{} }; setObj.marks[iso]=newVal;
+      db.collection("calendars").doc(docIdFor(name)).set(setObj, { merge:true });
+    });
+  }
+  function submitChecklistEntry(entry){ return db.collection("submissions").add(entry); }
+
+  function downloadBackup(){
+    var payload = JSON.stringify(state.data, null, 2);
+    var blob = new Blob([payload], { type:"application/json" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = "checklist_backup_"+todayISO()+".json";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  /* ---------- event handling ---------- */
+  var root = document.getElementById("app");
+
+  root.addEventListener("click", function(e){
+    var btn = e.target.closest("[data-action]");
+    if(!btn) return;
+    var action = btn.getAttribute("data-action");
+
+    if(action==="pickRole"){ state.role = btn.getAttribute("data-role"); render(); }
+    else if(action==="exitToGate"){ state.role = null; state.managerAuthed = false; render(); }
+    else if(action==="staffLogin"){
+      var v = document.getElementById("nameInput").value.trim();
+      if(!v) return;
+      saveMe(v); state.me = v; render();
+    }
+    else if(action==="switchName"){ clearMe(); state.me = null; render(); }
+    else if(action==="staffTab"){ state.staffTab = btn.getAttribute("data-tab"); render(); }
+    else if(action==="setShift"){ state.shift = btn.getAttribute("data-shift"); state.checked={}; state.photos={}; state.photoMeta={}; render(); }
+    else if(action==="toggleItem"){
+      var id = btn.getAttribute("data-id");
+      var items = itemsFor(state.me)[state.shift];
+      var it = items.find(function(x){return x.id===id;});
+      if(it && it.photoRequired && !state.photos[id]){
+        var inp = root.querySelector('[data-photo-input="'+id+'"]');
+        if(inp) inp.click();
+        return;
+      }
+      state.checked[id] = !state.checked[id];
+      render();
+    }
+    else if(action==="openCamera"){
+      var id2 = btn.getAttribute("data-id");
+      var inp2 = root.querySelector('[data-photo-input="'+id2+'"]');
+      if(inp2) inp2.click();
+    }
+    else if(action==="removePhoto"){
+      var id3 = btn.getAttribute("data-id");
+      delete state.photos[id3]; state.checked[id3] = false; render();
+    }
+    else if(action==="submitChecklist"){ submitChecklist(); }
+    else if(action==="managerLogin"){
+      var pw = document.getElementById("pwInput").value;
+      if(pw===MANAGER_PW){ state.managerAuthed = true; state.managerPwError = false; }
+      else { state.managerPwError = true; }
+      render();
+    }
+    else if(action==="mgrTab"){ state.managerTab = btn.getAttribute("data-tab"); render(); }
+    else if(action==="toggleInbox"){ var iid=btn.getAttribute("data-id"); state.inboxOpenId = state.inboxOpenId===iid?null:iid; render(); }
+    else if(action==="decide"){
+      var sid = btn.getAttribute("data-id"), status = btn.getAttribute("data-status");
+      var noteEl = document.getElementById("rejectNote_"+sid);
+      var note = noteEl ? noteEl.value : "";
+      decideSubmission(sid, status, note);
+      state.inboxOpenId = null;
+      render();
+    }
+    else if(action==="addTarget"){
+      var elN = document.getElementById("newTargetName");
+      var n = elN.value.trim();
+      state.targetsError = "";
+      if(!n) return;
+      if(state.data.targets.some(function(t){return t.name===n;})){ state.targetsError = "이미 지정된 이름이에요."; render(); return; }
+      addTarget(n);
+      elN.value = "";
+      render();
+    }
+    else if(action==="removeTarget"){ removeTarget(btn.getAttribute("data-name")); }
+    else if(action==="selectItemsStaff"){ state.itemsSelected = btn.getAttribute("data-name"); render(); }
+    else if(action==="setItemsShift"){ state.itemsShift = btn.getAttribute("data-shift"); render(); }
+    else if(action==="togglePhotoReq"){
+      var pid = btn.getAttribute("data-id");
+      var itms = clone(itemsFor(state.itemsSelected));
+      itms[state.itemsShift] = itms[state.itemsShift].map(function(x){ return x.id===pid ? Object.assign({},x,{photoRequired:!x.photoRequired}) : x; });
+      saveItems(state.itemsSelected, itms);
+    }
+    else if(action==="removeChecklistItem"){
+      var rid = btn.getAttribute("data-id");
+      var itms2 = clone(itemsFor(state.itemsSelected));
+      itms2[state.itemsShift] = itms2[state.itemsShift].filter(function(x){return x.id!==rid;});
+      saveItems(state.itemsSelected, itms2);
+    }
+    else if(action==="addChecklistItem"){
+      var labelEl = document.getElementById("newItemLabel");
+      var label = labelEl.value.trim();
+      if(!label) return;
+      var itms3 = clone(itemsFor(state.itemsSelected));
+      itms3[state.itemsShift] = itms3[state.itemsShift].concat([{ id:"i"+Date.now().toString(36)+Math.random().toString(36).slice(2,6), label:label, photoRequired:true }]);
+      saveItems(state.itemsSelected, itms3);
+      labelEl.value = "";
+    }
+    else if(action==="selectCalStaff"){ state.calSelected = btn.getAttribute("data-name"); render(); }
+    else if(action==="calPrev"){ var c=state.calCursor; state.calCursor = c.m===0 ? {y:c.y-1,m:11} : {y:c.y,m:c.m-1}; render(); }
+    else if(action==="calNext"){ var c2=state.calCursor; state.calCursor = c2.m===11 ? {y:c2.y+1,m:0} : {y:c2.y,m:c2.m+1}; render(); }
+    else if(action==="toggleCalDay"){
+      var iso = btn.getAttribute("data-iso");
+      var cur = state.data.calendars[state.calSelected] || {};
+      toggleCalDay(state.calSelected, iso, !cur[iso]);
+    }
+    else if(action==="reviewDecide"){
+      var rname = btn.getAttribute("data-name"), decision = btn.getAttribute("data-decision");
+      var target = state.data.targets.find(function(t){return t.name===rname;});
+      addReview(rname, decision, target);
+    }
+    else if(action==="setArchiveFilter"){ state.archiveFilter = btn.getAttribute("data-name"); render(); }
+    else if(action==="toggleArchive"){ var aid=btn.getAttribute("data-id"); state.archiveOpenId = state.archiveOpenId===aid?null:aid; render(); }
+    else if(action==="downloadBackup"){ downloadBackup(); }
+  });
+
+  root.addEventListener("change", function(e){
+    var input = e.target;
+    if(input.matches("[data-photo-input]")){
+      var id = input.getAttribute("data-photo-input");
+      var file = input.files && input.files[0];
+      if(!file) return;
+      compressImage(file, 900, 0.6).then(function(url){
+        state.photos[id] = url;
+        state.photoMeta[id] = nowTime();
+        state.checked[id] = true;
+        render();
+      });
+    }
+  });
+
+  root.addEventListener("keydown", function(e){
+    if(e.key!=="Enter") return;
+    var t = e.target;
+    if(t.id==="nameInput"){ root.querySelector('[data-action="staffLogin"]').click(); }
+    else if(t.id==="pwInput"){ root.querySelector('[data-action="managerLogin"]').click(); }
+    else if(t.id==="newTargetName"){ root.querySelector('[data-action="addTarget"]').click(); }
+    else if(t.id==="newItemLabel"){ root.querySelector('[data-action="addChecklistItem"]').click(); }
+  });
+
+  function submitChecklist(){
+    var name = state.me;
+    var items = itemsFor(name);
+    var currentItems = items[state.shift] || [];
+    var entry = {
+      staff: name, shift: state.shift, date: todayISO(), time: nowTime(), status: "pending",
+      items: currentItems.map(function(it){
+        return {
+          id: it.id, label: it.label, photoRequired: it.photoRequired,
+          done: !!state.checked[it.id],
+          photo: state.photos[it.id] || null,
+          photoTime: state.photoMeta[it.id] || null
+        };
+      })
+    };
+    submitChecklistEntry(entry);
+    state.checked = {}; state.photos = {}; state.photoMeta = {};
+    state.justSubmitted = true;
+    render();
+    setTimeout(function(){ state.justSubmitted = false; render(); }, 2000);
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>

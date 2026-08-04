@@ -135,7 +135,11 @@
   .cal-day{aspect-ratio:1;border-radius:10px;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);}
   .cal-day.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);}
   .cal-day.today{box-shadow:0 0 0 2px var(--ring);}
+  .cal-day.saving{opacity:0.6;}
+  .cal-day .spin{animation:spin 0.8s linear infinite;}
+  @keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
   .cal-note{font-size:11.5px;color:var(--text-muted);margin-top:12px;}
+  .cal-note.saved{color:var(--accent);font-weight:700;display:flex;align-items:center;gap:5px;}
   .due-card{background:var(--surface);border:2px solid var(--danger);border-radius:14px;padding:14px 15px;margin-bottom:10px;}
   .due-card .name{font-size:13.5px;font-weight:700;} .due-card .meta{font-size:11.5px;color:var(--text-muted);margin:4px 0 12px;}
   .due-actions{display:flex;gap:8px;} .due-actions button{flex:1;padding:10px;border-radius:10px;font-size:12px;font-weight:800;border:none;}
@@ -365,6 +369,7 @@ var FIREBASE_CONFIG = {
     itemsSelected: null, itemsShift: "open",
     calSelected: null,
     calCursor: (function(){ var d=new Date(); return { y:d.getFullYear(), m:d.getMonth() }; })(),
+    calSavingIso: null, calSavedIso: null, calSavedAt: null,
     archiveFilter: "all", archiveOpenId: null
   };
 
@@ -719,10 +724,15 @@ var FIREBASE_CONFIG = {
       var iso = y+"-"+pad(m+1)+"-"+pad(d);
       var on = !!marks[iso];
       var isToday = iso===todayISO();
-      html += '<button type="button" class="cal-day '+(on?"on":"")+' '+(isToday?"today":"")+'" data-action="toggleCalDay" data-iso="'+iso+'">'+d+'</button>';
+      var saving = state.calSavingIso===iso;
+      html += '<button type="button" class="cal-day '+(on?"on":"")+' '+(isToday?"today":"")+' '+(saving?"saving":"")+'" data-action="toggleCalDay" data-iso="'+iso+'">'+(saving?icon("rotateCcw",11,"spin"):d)+'</button>';
     }
     html += '</div>';
-    html += '<p class="cal-note">날짜를 눌러 '+escapeHtml(selected)+'의 근무일을 표시하세요 (진한 색 = 근무)</p>';
+    if(state.calSavedIso && state.calSavedAt){
+      html += '<p class="cal-note saved">'+icon("check",11)+' '+state.calSavedIso.split("-").slice(1).join(".")+'일 저장됨 · '+state.calSavedAt+'</p>';
+    } else {
+      html += '<p class="cal-note">날짜를 눌러 '+escapeHtml(selected)+'의 근무일을 표시하세요 (진한 색 = 근무) · 누르면 바로 저장돼요</p>';
+    }
     return html;
   }
 
@@ -829,9 +839,9 @@ var FIREBASE_CONFIG = {
   function toggleCalDay(name, iso, newVal){
     var fieldPath = "marks."+iso;
     var upd = {}; upd[fieldPath] = newVal;
-    db.collection("calendars").doc(docIdFor(name)).update(upd).catch(function(){
+    return db.collection("calendars").doc(docIdFor(name)).update(upd).catch(function(){
       var setObj = { marks:{} }; setObj.marks[iso]=newVal;
-      db.collection("calendars").doc(docIdFor(name)).set(setObj, { merge:true });
+      return db.collection("calendars").doc(docIdFor(name)).set(setObj, { merge:true });
     });
   }
   function updateSubmissionItem(name, shift, itemDef, patch){
@@ -964,7 +974,16 @@ var FIREBASE_CONFIG = {
     else if(action==="toggleCalDay"){
       var iso = btn.getAttribute("data-iso");
       var cur = state.data.calendars[state.calSelected] || {};
-      toggleCalDay(state.calSelected, iso, !cur[iso]);
+      var calName = state.calSelected;
+      state.calSavingIso = iso; state.calSavedIso = null; render();
+      toggleCalDay(calName, iso, !cur[iso]).then(function(){
+        state.calSavingIso = null;
+        state.calSavedIso = iso; state.calSavedAt = nowTime();
+        render();
+        setTimeout(function(){
+          if(state.calSavedIso===iso){ state.calSavedIso = null; render(); }
+        }, 1800);
+      });
     }
     else if(action==="reviewDecide"){
       var rname = btn.getAttribute("data-name"), decision = btn.getAttribute("data-decision");

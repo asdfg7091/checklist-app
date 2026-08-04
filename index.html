@@ -46,9 +46,9 @@
   .brand-head .glyph{color:var(--accent);margin-bottom:10px;}
   .brand-head h1{font-size:21px;font-weight:800;letter-spacing:-0.01em;}
   .brand-head p{font-size:12.5px;color:var(--text-muted);margin-top:6px;}
-  .role-btn{width:100%;padding:18px 20px;border-radius:18px;border:1.5px solid var(--border);background:var(--surface-3);display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;text-align:left;box-shadow:var(--shadow);}
+  .role-btn{width:100%;padding:18px 20px;border-radius:18px;border:1.5px solid var(--accent);background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;text-align:left;box-shadow:var(--shadow);}
   .role-btn.dark{background:var(--text);border-color:var(--text);color:var(--bg);}
-  .role-btn .t1{font-weight:800;font-size:14.5px;} .role-btn .t2{font-size:12px;margin-top:3px;opacity:0.65;}
+  .role-btn .t1{font-weight:800;font-size:14.5px;} .role-btn .t2{font-size:12px;margin-top:3px;opacity:0.8;}
   .field{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:13px 15px;margin-bottom:8px;}
   .field.err{border-color:var(--danger);}
   .field input{width:100%;border:none;outline:none;background:transparent;font-size:14.5px;color:var(--text);}
@@ -91,6 +91,11 @@
   .item-actions{flex:none;}
   .icon-btn{width:32px;height:32px;border-radius:10px;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text);}
   .submit-note{font-size:11.5px;text-align:center;color:var(--text-muted);margin-top:9px;}
+  .status-banner{width:100%;padding:14px;border-radius:14px;font-size:13.5px;font-weight:800;text-align:center;}
+  .status-banner.pending{background:var(--surface-2);color:var(--text-muted);}
+  .status-banner.approve{background:var(--accent-soft);color:var(--accent);}
+  .status-banner.reject{background:var(--danger-soft);color:var(--danger);}
+  .status-banner .note{display:block;font-weight:400;font-size:12px;margin-top:6px;}
   .empty{text-align:center;padding:64px 20px;color:var(--text-muted);}
   .empty .glyph{color:var(--border);margin-bottom:8px;} .empty p{font-size:13.5px;} .empty p.sub{font-size:12px;margin-top:4px;}
   .sub-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:13px 15px;margin-bottom:9px;}
@@ -331,6 +336,20 @@ var FIREBASE_CONFIG = {
 
   function itemsFor(staffName){ return state.data.items[staffName] || DEFAULT_ITEMS; }
 
+  function submissionDocId(name, shift, date){ return docIdFor(name)+"__"+date+"__"+shift; }
+  function todaySubmissionFor(name, shift){
+    var id = submissionDocId(name, shift, todayISO());
+    return state.data.submissions.find(function(s){ return s.id===id; }) || null;
+  }
+  function submissionItemsArray(s){
+    var map = s.items || {};
+    var order = s.order || [];
+    var seen = {};
+    var arr = order.map(function(id){ seen[id]=true; return map[id]; }).filter(Boolean);
+    Object.keys(map).forEach(function(id){ if(!seen[id]) arr.push(map[id]); });
+    return arr;
+  }
+
   /* ---------- state ---------- */
   var state = {
     role: null,
@@ -339,8 +358,6 @@ var FIREBASE_CONFIG = {
     me: loadMe(),
 
     staffTab: "today", shift: "open",
-    checked: {}, photos: {}, photoMeta: {},
-    justSubmitted: false,
 
     managerAuthed: false, managerPwError: false, managerTab: "inbox",
 
@@ -462,10 +479,10 @@ var FIREBASE_CONFIG = {
     var target = state.data.targets.find(function(t){ return t.name===name && t.active; });
     var items = itemsFor(name);
     var currentItems = items[state.shift] || [];
-    var doneCount = currentItems.filter(function(it){ return state.checked[it.id]; }).length;
-    var canSubmitAll = currentItems.length>0 && currentItems.every(function(it){
-      return state.checked[it.id] && (!it.photoRequired || state.photos[it.id]);
-    });
+    var sub = todaySubmissionFor(name, state.shift);
+    var subItems = (sub && sub.items) || {};
+    var doneCount = currentItems.filter(function(it){ return subItems[it.id] && subItems[it.id].done; }).length;
+    var allDone = currentItems.length>0 && doneCount===currentItems.length;
     var mySubs = state.data.submissions.filter(function(s){ return s.staff===name; });
 
     var html = '';
@@ -489,13 +506,14 @@ var FIREBASE_CONFIG = {
         html += '<div class="progress-row"><span>'+doneCount+' / '+currentItems.length+' 완료</span><div class="progress-track"><div class="progress-fill" style="width:'+(currentItems.length? (doneCount/currentItems.length*100):0)+'%"></div></div></div>';
         html += '<div>';
         currentItems.forEach(function(it){
-          var checked = !!state.checked[it.id];
-          var photo = state.photos[it.id];
+          var si = subItems[it.id] || {};
+          var checked = !!si.done;
+          var photo = si.photo;
           html += '<div class="item-row '+(checked?"done":"")+'">';
           html += '<button class="check-box '+(checked?"on":"")+'" data-action="toggleItem" data-id="'+it.id+'">'+(checked?icon("check",13):"")+'</button>';
           html += '<div class="item-body"><div class="item-label-row"><span>'+escapeHtml(it.label)+'</span>'+(it.photoRequired?icon("camera",11,"req-icon"):"")+'</div>';
           if(photo){
-            html += '<div class="photo-block"><img src="'+photo+'" alt="" /><div class="photo-meta">촬영 '+(state.photoMeta[it.id]||"")+'<button data-action="removePhoto" data-id="'+it.id+'">삭제</button></div></div>';
+            html += '<div class="photo-block"><img src="'+photo+'" alt="" /><div class="photo-meta">촬영 '+(si.photoTime||"")+'<button data-action="removePhoto" data-id="'+it.id+'">삭제</button></div></div>';
           } else if(it.photoRequired){
             html += '<p class="req-text">사진 촬영 필수 항목</p>';
           }
@@ -505,21 +523,27 @@ var FIREBASE_CONFIG = {
           html += '</div>';
         });
         html += '</div>';
-        html += '<button type="button" class="btn-cta" data-action="submitChecklist" '+((currentItems.length===0)?"disabled":"")+' style="background:'+(canSubmitAll?"var(--accent)":"var(--text)")+';border-color:'+(canSubmitAll?"var(--accent)":"var(--text)")+';color:'+(canSubmitAll?"var(--accent-ink)":"var(--bg)")+'">';
-        html += state.justSubmitted ? "제출 완료 ✓ 매니저 확인 대기중" : (canSubmitAll ? "체크리스트 제출" : "미완료 항목 있음 · 제출");
-        html += '</button>';
-        html += '<p class="submit-note">사진은 카메라로 바로 촬영한 것만 첨부돼요 (앨범 선택 불가)</p>';
+        if(sub && sub.status==="rejected"){
+          html += '<div class="status-banner reject">반려됨 · 다시 체크해주세요' + (sub.reviewNote? '<span class="note">사유: '+escapeHtml(sub.reviewNote)+'</span>':'') + '</div>';
+        } else if(sub && sub.status==="approved"){
+          html += '<div class="status-banner approve">승인 완료 ✓</div>';
+        } else if(allDone){
+          html += '<div class="status-banner pending">모든 항목 완료 · 매니저 확인 대기중</div>';
+        } else {
+          html += '<p class="submit-note">체크하거나 사진을 찍으면 그 즉시 저장돼요. 하나씩 완료해나가시면 돼요.</p>';
+        }
         html += '</div>';
       }
     } else {
       html += '<div class="px">';
       if(mySubs.length===0){
-        html += '<div class="empty">'+icon("archive",24)+'<p>아직 제출 기록이 없어요</p></div>';
+        html += '<div class="empty">'+icon("archive",24)+'<p>아직 기록이 없어요</p></div>';
       } else {
         mySubs.forEach(function(s){
+          var sArr = submissionItemsArray(s);
           html += '<div class="sub-card"><div class="sub-card-top"><p class="name">'+fmtDate(s.date)+' · '+(s.shift==="open"?"오픈":"마감")+'</p>'+statusBadge(s.status)+'</div>';
-          var doneN = s.items.filter(function(i){return i.done;}).length;
-          html += '<p class="meta">'+doneN+'/'+s.items.length+' 완료 · '+s.time+' 제출</p>';
+          var doneN = sArr.filter(function(i){return i.done;}).length;
+          html += '<p class="meta">'+doneN+'/'+sArr.length+' 완료 · '+(s.time||"")+' 업데이트</p>';
           if(s.status==="rejected" && s.reviewNote){ html += '<p class="reject-note">반려 사유: '+escapeHtml(s.reviewNote)+'</p>'; }
           html += '</div>';
         });
@@ -608,14 +632,15 @@ var FIREBASE_CONFIG = {
     var html = '';
     pending.forEach(function(s){
       var isOpen = state.inboxOpenId===s.id;
-      var total = s.items.length, done = s.items.filter(function(i){return i.done;}).length;
+      var sArr = submissionItemsArray(s);
+      var total = sArr.length, done = sArr.filter(function(i){return i.done;}).length;
       html += '<div class="arch-card"><button type="button" class="arch-top" data-action="toggleInbox" data-id="'+s.id+'">';
-      html += '<div><p class="staff">'+escapeHtml(s.staff)+' · '+(s.shift==="open"?"오픈":"마감")+'</p><p class="shift">'+fmtDate(s.date)+' '+s.time+' · '+done+'/'+total+' 완료</p></div>';
+      html += '<div><p class="staff">'+escapeHtml(s.staff)+' · '+(s.shift==="open"?"오픈":"마감")+'</p><p class="shift">'+fmtDate(s.date)+' '+(s.time||"")+' · '+done+'/'+total+' 완료</p></div>';
       html += icon(isOpen?"chevronDown":"chevronRight",16);
       html += '</button>';
       if(isOpen){
         html += '<div class="accordion-body">';
-        html += checklistItemsHTML(s.items);
+        html += checklistItemsHTML(sArr);
         html += '<input type="text" class="note-input" id="rejectNote_'+s.id+'" placeholder="반려 시 사유 (선택)" />';
         html += '<div class="decide-row"><button type="button" class="btn-reject" data-action="decide" data-id="'+s.id+'" data-status="rejected">반려</button>';
         html += '<button type="button" class="btn-approve" data-action="decide" data-id="'+s.id+'" data-status="approved">승인</button></div>';
@@ -762,13 +787,14 @@ var FIREBASE_CONFIG = {
       html += '<div class="date-group"><div class="date-h">'+fmtDate(date)+'</div>';
       byDate[date].forEach(function(s){
         var isOpen = state.archiveOpenId===s.id;
-        var missed = s.items.filter(function(i){return !i.done;});
+        var sArr = submissionItemsArray(s);
+        var missed = sArr.filter(function(i){return !i.done;});
         html += '<div class="arch-card"><button type="button" class="arch-top" data-action="toggleArchive" data-id="'+s.id+'">';
         html += '<div class="left"><span class="staff">'+escapeHtml(s.staff)+'</span><span class="shift">'+(s.shift==="open"?"오픈":"마감")+'</span></div>';
         html += '<div class="right">'+(missed.length>0?icon("alertCircle",12):"")+statusBadge(s.status)+'</div></button>';
         if(isOpen){
           html += '<div class="arch-detail">';
-          html += checklistItemsHTML(s.items);
+          html += checklistItemsHTML(sArr);
           if(s.reviewNote){ html += '<p class="reject-note">반려 사유: '+escapeHtml(s.reviewNote)+'</p>'; }
           html += '</div>';
         }
@@ -808,7 +834,22 @@ var FIREBASE_CONFIG = {
       db.collection("calendars").doc(docIdFor(name)).set(setObj, { merge:true });
     });
   }
-  function submitChecklistEntry(entry){ return db.collection("submissions").add(entry); }
+  function updateSubmissionItem(name, shift, itemDef, patch){
+    var id = submissionDocId(name, shift, todayISO());
+    var ref = db.collection("submissions").doc(id);
+    var itemVal = Object.assign({ label:itemDef.label, photoRequired:itemDef.photoRequired, done:false, photo:null, photoTime:null }, patch);
+    var upd = { status:"pending", reviewNote:"", time: nowTime() };
+    upd["items."+itemDef.id] = itemVal;
+    ref.update(upd).catch(function(){
+      var initItems = {};
+      initItems[itemDef.id] = itemVal;
+      var order = (itemsFor(name)[shift]||[]).map(function(x){ return x.id; });
+      ref.set({
+        staff:name, shift:shift, date: todayISO(), time: nowTime(),
+        status:"pending", reviewNote:"", order: order, items: initItems
+      }, { merge:true });
+    });
+  }
 
   function downloadBackup(){
     var payload = JSON.stringify(state.data, null, 2);
@@ -837,18 +878,20 @@ var FIREBASE_CONFIG = {
     }
     else if(action==="switchName"){ clearMe(); state.me = null; render(); }
     else if(action==="staffTab"){ state.staffTab = btn.getAttribute("data-tab"); render(); }
-    else if(action==="setShift"){ state.shift = btn.getAttribute("data-shift"); state.checked={}; state.photos={}; state.photoMeta={}; render(); }
+    else if(action==="setShift"){ state.shift = btn.getAttribute("data-shift"); render(); }
     else if(action==="toggleItem"){
       var id = btn.getAttribute("data-id");
       var items = itemsFor(state.me)[state.shift];
       var it = items.find(function(x){return x.id===id;});
-      if(it && it.photoRequired && !state.photos[id]){
+      if(!it) return;
+      var sub0 = todaySubmissionFor(state.me, state.shift);
+      var cur0 = sub0 && sub0.items && sub0.items[id];
+      if(it.photoRequired && !(cur0 && cur0.photo)){
         var inp = root.querySelector('[data-photo-input="'+id+'"]');
         if(inp) inp.click();
         return;
       }
-      state.checked[id] = !state.checked[id];
-      render();
+      updateSubmissionItem(state.me, state.shift, it, { done: !(cur0 && cur0.done) });
     }
     else if(action==="openCamera"){
       var id2 = btn.getAttribute("data-id");
@@ -857,9 +900,10 @@ var FIREBASE_CONFIG = {
     }
     else if(action==="removePhoto"){
       var id3 = btn.getAttribute("data-id");
-      delete state.photos[id3]; state.checked[id3] = false; render();
+      var items3 = itemsFor(state.me)[state.shift];
+      var it3 = items3.find(function(x){return x.id===id3;});
+      if(it3) updateSubmissionItem(state.me, state.shift, it3, { done:false, photo:null, photoTime:null });
     }
-    else if(action==="submitChecklist"){ submitChecklist(); }
     else if(action==="managerLogin"){
       var pw = document.getElementById("pwInput").value;
       if(pw===MANAGER_PW){ state.managerAuthed = true; state.managerPwError = false; }
@@ -934,11 +978,10 @@ var FIREBASE_CONFIG = {
       var id = input.getAttribute("data-photo-input");
       var file = input.files && input.files[0];
       if(!file) return;
+      var items = itemsFor(state.me)[state.shift];
+      var it = items.find(function(x){return x.id===id;});
       compressImage(file, 900, 0.6).then(function(url){
-        state.photos[id] = url;
-        state.photoMeta[id] = nowTime();
-        state.checked[id] = true;
-        render();
+        if(it) updateSubmissionItem(state.me, state.shift, it, { done:true, photo:url, photoTime: nowTime() });
       });
     }
   });
@@ -951,28 +994,6 @@ var FIREBASE_CONFIG = {
     else if(t.id==="newTargetName"){ root.querySelector('[data-action="addTarget"]').click(); }
     else if(t.id==="newItemLabel"){ root.querySelector('[data-action="addChecklistItem"]').click(); }
   });
-
-  function submitChecklist(){
-    var name = state.me;
-    var items = itemsFor(name);
-    var currentItems = items[state.shift] || [];
-    var entry = {
-      staff: name, shift: state.shift, date: todayISO(), time: nowTime(), status: "pending",
-      items: currentItems.map(function(it){
-        return {
-          id: it.id, label: it.label, photoRequired: it.photoRequired,
-          done: !!state.checked[it.id],
-          photo: state.photos[it.id] || null,
-          photoTime: state.photoMeta[it.id] || null
-        };
-      })
-    };
-    submitChecklistEntry(entry);
-    state.checked = {}; state.photos = {}; state.photoMeta = {};
-    state.justSubmitted = true;
-    render();
-    setTimeout(function(){ state.justSubmitted = false; render(); }, 2000);
-  }
 
   render();
 })();

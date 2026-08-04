@@ -3,10 +3,17 @@
 스텝이 폰에서 체크리스트를 제출하면, 매니저 폰/PC 화면에 **몇 초 안에 자동으로** 뜨는 버전입니다.
 Firebase(Firestore)라는 무료 실시간 데이터베이스를 씁니다. 신용카드 등록 없이 무료 한도로 충분합니다.
 
-**배포된 링크**: https://asdfg7091.github.io/checklist-app/ (GitHub Pages, 이미 배포됨)
+**배포된 링크**: https://asdfg7091.github.io/checklist-app/ (GitHub Pages, 이미 배포·설정 완료됨)
 
-지금은 Firebase 연결 정보가 비어 있어서 "설정이 필요해요" 화면만 떠요.
-아래 순서대로 설정값만 채워 넣고 다시 올리면 바로 쓸 수 있어요.
+**Firebase 프로젝트**: `cafe-checklist-app` (이 앱 전용 프로젝트입니다)
+
+> ⚠️ **다른 프로젝트와 절대 공유하지 마세요.** 이전에 같은 Firebase 프로젝트(`checklist-app-b6e3f`)를
+> `schedule-app`(근무표) 프로젝트와 같이 쓰다가, 그쪽에서 보안 규칙을 자기 앱에 맞게 새로 배포하면서
+> 이 앱 규칙까지 덮어써서 "Missing or insufficient permissions" 오류가 났던 적이 있어요.
+> 그래서 이 앱만을 위한 별도 프로젝트(`cafe-checklist-app`)로 분리했습니다 — 앞으로 다른 Firebase
+> 앱을 만들 때는 반드시 새 프로젝트를 만들어서 쓰세요.
+
+아래 내용은 이미 완료되어 있어서 참고용입니다. 프로젝트를 새로 옮기거나 처음부터 만들 때만 따라 하면 돼요.
 
 ---
 

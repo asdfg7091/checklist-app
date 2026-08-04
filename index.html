@@ -841,9 +841,13 @@ var FIREBASE_CONFIG = {
     var upd = { status:"pending", reviewNote:"", time: nowTime() };
     upd["items."+itemDef.id] = itemVal;
     ref.update(upd).catch(function(){
+      var defs = itemsFor(name)[shift] || [];
       var initItems = {};
+      defs.forEach(function(d){
+        initItems[d.id] = { label:d.label, photoRequired:d.photoRequired, done:false, photo:null, photoTime:null };
+      });
       initItems[itemDef.id] = itemVal;
-      var order = (itemsFor(name)[shift]||[]).map(function(x){ return x.id; });
+      var order = defs.map(function(x){ return x.id; });
       ref.set({
         staff:name, shift:shift, date: todayISO(), time: nowTime(),
         status:"pending", reviewNote:"", order: order, items: initItems
